@@ -53,6 +53,7 @@ bun exact.mjs agent web --storage s1 --url "/?scene=guard" "clock data" \
   "tap give-insulin-pm-2026-11-06" "clock data" "screenshot .exact/guard.png"
 bun exact.mjs linux && bun exact.mjs test linux   # the headless Linux host
 bun exact.mjs web                # the dev loop
+bun run deploy                   # release build to Cloudflare (wrangler.jsonc); CI does it on main
 ```
 
 Scenes: `morning`, `afternoon`, `guard` (tap the evening Give to trip it), `late`, `done`, `midnight`.

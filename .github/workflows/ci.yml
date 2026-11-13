@@ -21,3 +21,33 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with: { name: verify, path: fryday-exact/.exact/verify }
+      # The release web build, for the deploy job: a static site (dist/.exact holds Exact's install pages).
+      - run: bun exact.mjs web-build --out dist
+        working-directory: fryday-exact
+      - uses: actions/upload-artifact@v7
+        with: { name: web-dist, path: fryday-exact/dist, include-hidden-files: true }
+
+  # main only, after every check passes: dist/ to Cloudflare Workers static assets (wrangler.jsonc).
+  # Needs the repo secrets CLOUDFLARE_API_TOKEN ("Edit Cloudflare Workers" template) and
+  # CLOUDFLARE_ACCOUNT_ID; until they exist, it says so and skips.
+  deploy:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency: { group: deploy, cancel-in-progress: false }
+    environment: { name: production, url: "${{ steps.deploy.outputs.url }}" }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with: { name: web-dist, path: dist }
+      - id: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::notice::No CLOUDFLARE_API_TOKEN secret yet, so nothing was deployed."
+            exit 0
+          fi
+          npx -y wrangler@4.161.0 deploy | tee deploy.log
+          echo "url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' deploy.log | head -1)" >> "$GITHUB_OUTPUT"
