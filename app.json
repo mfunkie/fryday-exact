@@ -1,0 +1,51 @@
+{
+  "$schema": "../expo/exact/scripts/app.schema.json",
+  "name": "Fryday",
+  "short_name": "Fryday",
+  "id": "dev.funkie.fryday",
+  "start_url": "/",
+  "display": "standalone",
+  "app": {
+    "id": "dev.funkie.fryday",
+    "name": "Fryday"
+  },
+  "host": {
+    "web": {},
+    "linux": {}
+  },
+  "deploy": {
+    "store": {
+      "web": "0",
+      "linux": "0"
+    }
+  },
+  "verify": {
+    "accept": [
+      {
+        "finding": "fixed-type",
+        "node": "orb-eyebrow",
+        "why": "The orb is a dial: its face is a fixed circle sized to its ring, as a watch face is, so its words keep their size; the same words are in the cards, which scale."
+      },
+      {
+        "finding": "fixed-type",
+        "node": "orb-big",
+        "why": "The orb is a dial: its face is a fixed circle sized to its ring, as a watch face is, so its words keep their size; the same words are in the cards, which scale."
+      },
+      {
+        "finding": "fixed-type",
+        "node": "orb-caption",
+        "why": "The orb is a dial: its face is a fixed circle sized to its ring, as a watch face is, so its words keep their size; the same words are in the cards, which scale."
+      },
+      {
+        "finding": "fixed-type",
+        "node": "orb-detail",
+        "why": "The orb is a dial: its face is a fixed circle sized to its ring, as a watch face is, so its words keep their size; the same words are in the cards, which scale."
+      },
+      {
+        "finding": "clipped",
+        "node": "orb-detail",
+        "why": "The orb is a dial: its face is a fixed circle sized to its ring, as a watch face is, so its words keep their size; the same words are in the cards, which scale."
+      }
+    ]
+  }
+}

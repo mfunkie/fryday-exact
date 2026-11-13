@@ -1,0 +1,25 @@
+{
+  "pet": "Fry",
+  "caregivers": ["You", "Jess"],
+  "window": { "early_min": 60, "late_min": 60 },
+  "meds": [
+    {
+      "id": "insulin",
+      "name": "Insulin",
+      "kind": "insulin",
+      "note": "after a meal",
+      "slots": [
+        { "id": "am", "label": "Morning", "at": "07:00:00" },
+        { "id": "pm", "label": "Evening", "at": "19:00:00" }
+      ]
+    },
+    {
+      "id": "amlodipine",
+      "name": "Amlodipine",
+      "kind": "liquid",
+      "note": "in Churu",
+      "slots": [{ "id": "am", "label": "Morning", "at": "07:00:00" }],
+      "guard_hours": 6
+    }
+  ]
+}

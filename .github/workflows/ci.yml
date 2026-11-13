@@ -1,0 +1,23 @@
+# Untested draft: Exact is used by path (../expo/exact), so CI checks out both side by side.
+name: ci
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: fryday-exact }
+      - uses: actions/checkout@v4
+        with: { repository: expo/exact, path: expo/exact }
+      - uses: oven-sh/setup-bun@v2
+      - run: bun scripts/exact.mjs setup
+        working-directory: expo/exact
+      - run: bun install && bun test core
+        working-directory: fryday-exact
+      - run: bun exact.mjs contract build app.contract --json --errors-only
+        working-directory: fryday-exact
+      - run: bun exact.mjs verify --shots .exact/verify
+        working-directory: fryday-exact
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: verify, path: fryday-exact/.exact/verify }

@@ -1,0 +1,72 @@
+tamber fryday
+
+// Fry's oranges on a plum night: the Rune app's style.rs, as tokens. Fryday is always dark, so
+// every colour is fixed and the root says color-scheme="dark".
+theme
+  ink = #0e0812  scheme=fixed
+  text = #f7efe8  scheme=fixed
+  muted = #e6d9de  scheme=fixed
+  faint = #d2c1c8  scheme=fixed
+  tangerine = #ff8a3d  scheme=fixed
+  amber = #ffb547  scheme=fixed
+  mint = #6ee7c8  scheme=fixed
+  ember = #ff5c6c  scheme=fixed
+  ember-text = #ff9aa3  scheme=fixed
+  on-metal = #2a1206  scheme=fixed
+  guard-text = #ffd1d6  scheme=fixed
+
+  // The night backdrop's mesh.
+  mesh-plum = #3d1a4f  scheme=fixed
+  mesh-rust = #c2410c  scheme=fixed
+  mesh-deep = #1c0f2e  scheme=fixed
+  mesh-wine = #6b1d2e  scheme=fixed
+
+  // Frosted glass, tinted toward ink so text keeps its contrast over the brightest mesh.
+  glass-fill = rgb(22 11 28 / 0.42)  scheme=fixed
+  glass-edge = rgb(255 255 255 / 0.10)  scheme=fixed
+  glass-shadow = rgb(0 0 0 / 0.35)  scheme=fixed
+  orb-face = rgb(18 10 22 / 0.94)  scheme=fixed
+  chip-fill = rgb(255 255 255 / 0.06)  scheme=fixed
+  chip-on = rgb(255 255 255 / 0.14)  scheme=fixed
+  dot-empty = rgb(255 255 255 / 0.07)  scheme=fixed
+  dot-partial = rgb(255 181 71 / 0.3)  scheme=fixed
+  dot-ring = rgb(255 255 255 / 0.55)  scheme=fixed
+
+  // Glows: each accent at the alpha its shadow takes.
+  glow-tangerine = rgb(255 138 61 / 0.55)  scheme=fixed
+  glow-amber = rgb(255 181 71 / 0.45)  scheme=fixed
+  glow-mint = rgb(110 231 200 / 0.45)  scheme=fixed
+  glow-ember = rgb(255 92 108 / 0.6)  scheme=fixed
+  mint-wash = rgb(110 231 200 / 0.16)  scheme=fixed
+  mint-edge = rgb(110 231 200 / 0.5)  scheme=fixed
+  ember-wash = rgb(255 92 108 / 0.12)  scheme=fixed
+  ember-edge = rgb(255 92 108 / 0.55)  scheme=fixed
+
+  // The Give button's enamel, and the ember one the guard turns it into.
+  give-top = #ffd08a  scheme=fixed
+  give-bottom = #ff8a3d  scheme=fixed
+  warn-top = #ffb3a0  scheme=fixed
+  warn-bottom = #ff5c6c  scheme=fixed
+
+  // Med tiles: a vial, a droplet, a capsule.
+  tile-insulin-a = #ffb547  scheme=fixed
+  tile-insulin-b = #ff6a3d  scheme=fixed
+  tile-liquid-a = #6ee7c8  scheme=fixed
+  tile-liquid-b = #2b8fd6  scheme=fixed
+  tile-pill-a = #c4a7ff  scheme=fixed
+  tile-pill-b = #7c5cff  scheme=fixed
+  tile-ink = rgb(255 255 255 / 0.94)  scheme=fixed
+
+  // Liquid metal: gold, chrome, rose, as a conic sweep's highlights and shadows.
+  gold-hi = #fff3c4  scheme=fixed
+  gold-mid = #e0a93a  scheme=fixed
+  gold-lo = #6b4310  scheme=fixed
+  chrome-hi = #ffffff  scheme=fixed
+  chrome-mid = #a9b4c2  scheme=fixed
+  chrome-lo = #3a4350  scheme=fixed
+  rose-hi = #ffe1dc  scheme=fixed
+  rose-mid = #e8838a  scheme=fixed
+  rose-lo = #6b2230  scheme=fixed
+  tile-edge = rgb(255 255 255 / 0.22)  scheme=fixed
+  give-edge = rgb(255 255 255 / 0.55)  scheme=fixed
+  vial-cap = rgb(255 255 255 / 0.75)  scheme=fixed

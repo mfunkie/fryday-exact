@@ -1,0 +1,12 @@
+{
+  "name": "fryday-exact",
+  "private": true,
+  "scripts": {
+    "build": "bun exact.mjs web-build --out dist",
+    "start": "bun exact.mjs serve dist"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "fast-check": "^4.10.2"
+  }
+}

@@ -1,0 +1,313 @@
+// Fryday: Fry's insulin and amlodipine, with a double-dose guard. The same app as the Rune
+// reference (mfunkie/fryday): a countdown orb, today's doses as glass cards, a streak strip.
+// `app.ts` answers the board (every word on screen, worked out by `core/` from the log and the
+// instant passed in); this file places and paints it. Colours are `app.tamber`'s tokens.
+
+keyframes spin
+  to rotate="360deg"
+keyframes radar
+  from scale=0.82 opacity=0.75
+  to scale=1.32 opacity=0
+keyframes drift
+  50% translate="-4% 3%" scale=1.08
+keyframes swap-in
+  from opacity=0 scale=0.94
+keyframes swap-out
+  to opacity=0 scale=1.04
+keyframes breathe
+  50% opacity=0.55
+keyframes sparkle
+  0% opacity=0 scale=0.2
+  25% opacity=1 scale=1.1
+  100% opacity=0 scale=0.3 translate="0px -18px"
+
+routes nav
+  home "/"
+
+shape Time
+  epochAtZero: number
+  utcOffset: number
+
+shape Viewport
+  width: number
+  prefersReducedMotion: bool
+
+shape Face
+  eyebrow: string
+  big: string
+  caption: string
+  detail: string
+  tone: string
+  metal: string
+  pulse: bool
+
+shape Card
+  key: string
+  med: string
+  slot: string
+  day: string
+  name: string
+  kind: string
+  subtitle: string
+  words: string
+  tone: string
+  state: string
+  givenBy: string
+  givenAt: string
+  chip: string
+  next: bool
+  guard: string
+
+shape Dot
+  day: string
+  fill: string
+  fraction: number
+
+shape Board
+  dateLine: string
+  caregivers: string[]
+  face: Face
+  cards: Card[]
+  streak: number
+  dots: Dot[]
+  undo: string
+  late: bool
+
+shape Reply
+  ok: bool
+  outcome: string
+  notice: string
+
+fn tileA(kind: string): string = kind == "insulin" ? "var(--tile-insulin-a)" : kind == "liquid" ? "var(--tile-liquid-a)" : "var(--tile-pill-a)"
+fn tileB(kind: string): string = kind == "insulin" ? "var(--tile-insulin-b)" : kind == "liquid" ? "var(--tile-liquid-b)" : "var(--tile-pill-b)"
+
+component Fryday
+  resource time = exactTime() as shape Time
+  resource viewport = exactViewport() as shape Viewport
+  state now = 0
+  state who = 0 persist
+  state pendingKey = ""
+  state tapped = ""
+  state burstKey = ""
+  state notice = ""
+  derive scene = searchParam(top(nav), "scene")
+  derive shown = time.epochAtZero + now
+  resource board = loadBoard(scene, time.utcOffset, pendingKey) with shown as shape Board
+  mutation given as shape Reply queue refreshes board then afterGive
+  mutation undone as shape Reply queue refreshes board then afterUndo
+  derive outcome = match given { case some(r) => r.outcome, case none => "" }
+  derive refusal = match given { case some(r) => r.notice, case none => "" }
+  derive wide = viewport.width >= 820
+  derive still = viewport.prefersReducedMotion
+  derive orb = wide ? 300 : 260
+  derive ring = wide ? 224 : 196
+  derive inner = wide ? 190 : 166
+  derive caregiver = match board.caregivers.at(who) { case some(n) => n, case none => "You" }
+
+  task tick mount
+    every(30000, step)
+  task fade when burstKey != "" key=burstKey
+    after(2200, clearBurst)
+
+  action step
+    now = performanceNow()
+  action follow(url: string)
+    nav = go(nav, url)
+  action setWho(i: number)
+    who = i
+  // A tap on Give. The first tap inside the guard hours comes back `tooSoon` and the card asks;
+  // a second tap on the same card sends the override.
+  action give(key: string, med: string, slot: string, day: string)
+    let at = time.epochAtZero + performanceNow()
+    now = performanceNow()
+    tapped = key
+    notice = ""
+    send given = giveDose(scene, med, slot, day, at, time.utcOffset, caregiver, pendingKey == key)
+  action afterGive
+    if outcome == "tooSoon"
+      pendingKey = tapped
+    else if outcome == "logged"
+      pendingKey = ""
+      burstKey = tapped
+    else
+      pendingKey = ""
+      notice = refusal
+  action cancel
+    pendingKey = ""
+  action undo
+    pendingKey = ""
+    send undone = undoLast(scene)
+  action afterUndo
+    burstKey = ""
+  action clearBurst
+    burstKey = ""
+
+  view
+    main testId="root" navigationKey=`${top(nav).id}` navigate=follow width="100%" height="100%"
+      color-scheme="dark" background-color="ink" color="text"
+      // The backdrop: an oversized mesh that drifts, so the edges never show.
+      // Two literal layers crossfade: Exact checks a literal gradient at build, so each is written out.
+      view position="absolute" inset=0 overflow="hidden" aria-hidden=true
+       view position="absolute" top="-15%" left="-15%" width="130%" height="130%"
+        animation=(still ? "none" : "drift 18s ease-in-out infinite") testId="mesh"
+        view position="absolute" inset=0 background-image="radial-gradient(42% 38% at 96% 0%, var(--tangerine), transparent), radial-gradient(55% 60% at 12% 92%, var(--mesh-rust), transparent), radial-gradient(45% 50% at 22% 32%, var(--mesh-plum), transparent), radial-gradient(70% 70% at 70% 85%, var(--mesh-plum), transparent)"
+          opacity=(board.late ? 0 : 0.75) transition="opacity 900ms ease"
+        view position="absolute" inset=0 background-image="radial-gradient(42% 38% at 96% 0%, var(--ember), transparent), radial-gradient(55% 60% at 12% 92%, var(--mesh-wine), transparent), radial-gradient(45% 50% at 20% 30%, var(--tangerine), transparent), radial-gradient(70% 70% at 70% 85%, var(--mesh-deep), transparent)"
+          opacity=(board.late ? 0.75 : 0) transition="opacity 900ms ease"
+      scroll id="content" position="absolute" inset=0
+        column padding=(wide ? 32 : 20) gap=24 max-width=(wide ? "920px" : "480px") margin-left="auto" margin-right="auto"
+          // Header: the name and date, and who doses are logged as.
+          row flex-wrap="wrap" align-items="center" gap=12 testId="header"
+            column flex="1 1 12rem" gap=4
+              row align-items="center" gap=10
+                view width=10 height=10 border-radius=5 background-image="linear-gradient(135deg, var(--amber), var(--ember))" aria-hidden=true
+                text "Fryday" role="heading" aria-level=1 font-size="1.625rem" font-weight=650 testId="title"
+              text board.dateLine font-size="0.875rem" color="muted" testId="date"
+            row flex-wrap="wrap" align-items="center" gap=10
+              text "Logging as" font-size="0.75rem" font-weight=500 color="text"
+              row role="radiogroup" aria-label="Logging as" appearance="none" gap=4 padding=4 border-radius=20
+                background-color="chip-fill" border="1px solid var(--glass-edge)" testId="caregivers"
+                for name, i in board.caregivers key=name
+                  button role="radio" aria-checked=(who == i) press=setWho(i) testId=`who-${i}`
+                    min-height="1.875rem" padding="0 14px" border-radius=15 border="none"
+                    background-color=(who == i ? "chip-on" : "transparent")
+                    transition="background-color 200ms ease"
+                    text name font-size="0.8125rem" font-weight=(who == i ? 600 : 500) color=(who == i ? "text" : "muted")
+
+          // Main: the orb and streak beside today's cards when wide; stacked on a phone.
+          row flex-wrap="wrap" gap=28 align-items="flex-start"
+            column flex="1 1 300px" align-items="center" gap=14 max-width=(wide ? "340px" : "100%") testId="hero"
+              // The orb: an aura, pulse rings while a dose wants attention, the metal ring, its face.
+              view position="relative" width=orb height=orb testId="orb"
+                view position="absolute" top=(orb - ring) / 2 left=(orb - ring) / 2 width=ring height=ring aria-hidden=true testId="aura"
+                  view position="absolute" inset=0 border-radius=ring / 2 box-shadow="0 0 60px 14px var(--glow-tangerine)"
+                    opacity=(board.face.tone == "tangerine" ? 1 : 0) transition="opacity 600ms ease"
+                  view position="absolute" inset=0 border-radius=ring / 2 box-shadow="0 0 60px 14px var(--glow-amber)"
+                    opacity=(board.face.tone == "amber" ? 1 : 0) transition="opacity 600ms ease"
+                  view position="absolute" inset=0 border-radius=ring / 2 box-shadow="0 0 60px 14px var(--glow-mint)"
+                    opacity=(board.face.tone == "mint" ? 1 : 0) transition="opacity 600ms ease"
+                  view position="absolute" inset=0 border-radius=ring / 2 box-shadow="0 0 60px 14px var(--glow-ember)"
+                    opacity=(board.face.tone == "ember" ? 1 : 0) transition="opacity 600ms ease"
+                if board.face.pulse
+                  for n in [0, 1] key=n
+                    view position="absolute" top=(orb - ring) / 2 left=(orb - ring) / 2 width=ring height=ring border-radius=ring / 2
+                      border-width=2 border-style="solid" border-color=board.face.tone aria-hidden=true
+                      animation=(still ? "none" : `radar 2.4s ease-out ${n * 1.2}s infinite`) opacity=(still ? 0 : 1)
+                view position="absolute" top=(orb - ring) / 2 left=(orb - ring) / 2 width=ring height=ring border-radius=ring / 2
+                  aria-hidden=true testId="ring" animation=(still ? "none" : "spin 14s linear infinite")
+                  view position="absolute" inset=0 border-radius=ring / 2 background-image="conic-gradient(from 20deg, var(--gold-hi), var(--gold-mid) 14%, var(--gold-lo) 26%, var(--gold-hi) 38%, var(--gold-mid) 52%, var(--gold-lo) 66%, var(--gold-hi) 80%, var(--gold-mid) 90%, var(--gold-hi))"
+                    opacity=(board.face.metal == "gold" ? 1 : 0) transition="opacity 600ms ease"
+                  view position="absolute" inset=0 border-radius=ring / 2 background-image="conic-gradient(from 20deg, var(--chrome-hi), var(--chrome-mid) 14%, var(--chrome-lo) 26%, var(--chrome-hi) 38%, var(--chrome-mid) 52%, var(--chrome-lo) 66%, var(--chrome-hi) 80%, var(--chrome-mid) 90%, var(--chrome-hi))"
+                    opacity=(board.face.metal == "chrome" ? 1 : 0) transition="opacity 600ms ease"
+                  view position="absolute" inset=0 border-radius=ring / 2 background-image="conic-gradient(from 20deg, var(--rose-hi), var(--rose-mid) 14%, var(--rose-lo) 26%, var(--rose-hi) 38%, var(--rose-mid) 52%, var(--rose-lo) 66%, var(--rose-hi) 80%, var(--rose-mid) 90%, var(--rose-hi))"
+                    opacity=(board.face.metal == "rose" ? 1 : 0) transition="opacity 600ms ease"
+                column position="absolute" top=(orb - inner) / 2 left=(orb - inner) / 2 width=inner height=inner border-radius=inner / 2
+                  background-color="orb-face" border="1px solid var(--glass-edge)"
+                  align-items="center" justify-content="center" gap=2 role="status" testId="orb-face"
+                  for f in [board.face] key=`${f.eyebrow}|${f.big}|${f.caption}`
+                    column align-items="center" gap=2
+                      animation=(still ? "none" : "swap-in 320ms ease-out both")
+                      text f.eyebrow font-size=11 font-weight=650 letter-spacing=1 color=(f.tone == "ember" ? "ember-text" : f.tone) testId="orb-eyebrow"
+                      text f.big font-size=(wide ? 40 : 36) font-weight=650 font-variant-numeric="tabular-nums" testId="orb-big"
+                      text f.caption font-size=13 font-weight=500 color="muted" text-align="center" testId="orb-caption"
+                      text f.detail font-size=12 color="faint" testId="orb-detail"
+
+              // The streak: complete days in a row, and the last fourteen as dots.
+              column align-self="stretch" padding=16 gap=12 border-radius=20 background-color="glass-fill"
+                backdrop-filter="blur(18px)" border="1px solid var(--glass-edge)" box-shadow="0 12px 32px var(--glass-shadow)"
+                testId="streak-card"
+                row flex-wrap="wrap" align-items="center" gap=10
+                  text `${board.streak}` font-size="1.875rem" font-weight=700 color="amber" testId="streak"
+                  column flex="1 1 8rem" gap=1
+                    text "day streak" font-size="0.875rem" font-weight=600
+                    text "every dose logged" font-size="0.75rem" color="faint"
+                row gap=6 flex-wrap="wrap" aria-label=`${board.dots.filter(d => d.fill == "full").length} of the last 14 days complete` testId="days"
+                  for d, i in board.dots key=d.day
+                    view width=14 height=14 border-radius=7 testId=`day-${i}`
+                      background-image=(d.fill == "full" ? "linear-gradient(135deg, var(--amber), var(--tangerine))" : "none")
+                      background-color=(d.fill == "partial" ? "dot-partial" : d.fill == "empty" ? "dot-empty" : "transparent")
+                      box-shadow=(i == 13 ? "0 0 0 2px var(--ink), 0 0 0 3.5px var(--dot-ring)" : d.fill == "full" ? "0 0 8px var(--glow-tangerine)" : "none")
+
+            // Today: a glass card per dose.
+            column flex="1 1 360px" min-width=0 gap=12 testId="today"
+              row flex-wrap="wrap" align-items="center" gap=8
+                text "Today" role="heading" aria-level=2 font-size="1.125rem" font-weight=650 flex="1 1 6rem"
+                if board.undo != ""
+                  button press=undo aria-label="Undo the last logged dose" testId="undo"
+                    text board.undo font-size="0.8125rem" color="muted"
+              for c in board.cards key=c.key
+                column position="relative" padding=16 gap=12 border-radius=22
+                  background-color="glass-fill" backdrop-filter="blur(18px)"
+                  border=(c.guard != "" ? "1px solid var(--ember-edge)" : "1px solid var(--glass-edge)")
+                  box-shadow=(c.guard != "" ? "0 0 26px var(--glow-ember)" : c.next ? "0 0 22px var(--glow-amber)" : "0 12px 32px var(--glass-shadow)")
+                  transition="box-shadow 400ms ease"
+                  -exact-layout-transition=(still ? "none" : "320ms ease")
+                  testId=`card-${c.key}`
+                  row flex-wrap="wrap" align-items="center" gap=14 row-gap=10
+                    // The med's tile: a vial, a droplet or a capsule.
+                    view width=48 height=48 border-radius=14 flex-shrink=0 align-items="center" justify-content="center"
+                      display="flex" background-image=`linear-gradient(135deg, ${tileA(c.kind)}, ${tileB(c.kind)})`
+                      border="1px solid var(--tile-edge)" aria-hidden=true
+                      svg width=26 height=26 viewBox="0 0 26 26"
+                        if c.kind == "insulin"
+                          rect x=6 y=1 width=14 height=4 rx=1.5 fill="var(--vial-cap)"
+                          rect x=7 y=6 width=12 height=19 rx=3.5 fill="var(--tile-ink)"
+                          rect x=9 y=14 width=8 height=2 rx=1 fill="var(--tile-insulin-b)"
+                        else if c.kind == "liquid"
+                          path d="M13 2 C13 2 5 11 5 16.5 A8 8 0 0 0 21 16.5 C21 11 13 2 13 2 Z" fill="var(--tile-ink)"
+                        else
+                          rect x=3 y=9 width=20 height=9 rx=4.5 fill="var(--tile-ink)" transform="rotate(-45 13 13.5)"
+                    column flex="1 1 9rem" min-width=0 gap=4
+                      text c.name font-size="1.0625rem" font-weight=620 testId=`name-${c.key}`
+                      row flex-wrap="wrap" column-gap=6
+                        text c.subtitle font-size="0.8125rem" color="muted"
+                        for w in [c.words] key=w
+                          text w font-size="0.8125rem" font-weight=600 color=(c.tone == "ember" ? "ember-text" : c.tone)
+                            animation=(still ? "none" : "swap-in 280ms ease-out both") testId=`status-${c.key}`
+                    // The card's end: Give, who gave it, or when it opens.
+                    if c.state == "give" or c.state == "late"
+                      button press=give(c.key, c.med, c.slot, c.day) testId=`give-${c.key}`
+                        aria-label=`${c.guard != "" ? "Give anyway" : "Give"}: ${c.name.toLowerCase()} as ${caregiver}`
+                        min-height="2.5rem" padding=(c.guard != "" ? "0 18px" : "0 26px") border-radius=20 max-width="100%"
+                        border="1.5px solid var(--give-edge)"
+                        background-image=(c.guard != "" or c.state == "late" ? "linear-gradient(180deg, var(--warn-top), var(--warn-bottom))" : "linear-gradient(180deg, var(--give-top), var(--give-bottom))")
+                        box-shadow=(c.guard != "" or c.state == "late" ? "0 8px 20px var(--glow-ember)" : "0 8px 20px var(--glow-tangerine)")
+                        :active
+                          -exact-press-scale=0.94
+                        text (c.guard != "" ? "Give anyway" : "Give") font-size="0.875rem" font-weight=700 color="on-metal"
+                    else if c.state == "given"
+                      row align-items="center" gap=10 testId=`given-${c.key}`
+                        column align-items="flex-end" gap=2
+                          text c.givenBy font-size="0.8125rem" font-weight=600
+                          text c.givenAt font-size="0.75rem" color="faint"
+                        view width=30 height=30 border-radius=15 background-color="mint-wash" border="1px solid var(--mint-edge)"
+                          display="flex" align-items="center" justify-content="center" aria-hidden=true
+                          svg width=14 height=14 viewBox="0 0 14 14"
+                            path d="M2 7.5 L5.5 11 L12 3.5" stroke="var(--mint)" stroke-width=2.4 fill="none" stroke-linecap="round" stroke-linejoin="round"
+                    else
+                      view min-height="1.875rem" padding="0 12px" border-radius=15 display="flex" align-items="center"
+                        background-color=(c.state == "missed" ? "ember-wash" : "chip-fill") border="1px solid var(--chip-fill)"
+                        testId=`chip-${c.key}`
+                        text (c.state == "missed" ? "Missed" : c.chip) font-size="0.78125rem" font-weight=600 color=(c.state == "missed" ? "ember-text" : "muted")
+                  // The guard: what was given, and a way out.
+                  if c.guard != ""
+                    row flex-wrap="wrap" align-items="center" gap=12 animation=(still ? "none" : "swap-in 260ms ease-out both") role="alert" testId="guard"
+                      text c.guard font-size="0.78125rem" font-weight=500 color="guard-text" flex="1 1 12rem" min-width=0
+                      button press=cancel testId="cancel"
+                        text "Cancel" font-size="0.8125rem" font-weight=600 color="muted"
+                  // A sparkle burst over the dose just logged.
+                  if burstKey == c.key
+                    view position="absolute" inset=0 pointer-events="none" aria-hidden=true testId="burst"
+                      for s in range(16) key=s
+                        view position="absolute" left=`${4 + (s * 37) % 90}%` top=`${6 + (s * 53) % 78}%`
+                          width=(12 + s % 3 * 6) height=(12 + s % 3 * 6) opacity=0
+                          animation=(still ? "none" : `sparkle 1.6s ease-out ${s * 45}ms both`) testId=`spark-${s}`
+                          svg width="100%" height="100%" viewBox="0 0 20 20"
+                            if s % 3 == 0
+                              path d="M10 0 Q11.2 8.8 20 10 Q11.2 11.2 10 20 Q8.8 11.2 0 10 Q8.8 8.8 10 0 Z" fill="var(--amber)"
+                            else if s % 3 == 1
+                              path d="M10 0 Q11.2 8.8 20 10 Q11.2 11.2 10 20 Q8.8 11.2 0 10 Q8.8 8.8 10 0 Z" fill="var(--tangerine)"
+                            else
+                              path d="M10 0 Q11.2 8.8 20 10 Q11.2 11.2 10 20 Q8.8 11.2 0 10 Q8.8 8.8 10 0 Z" fill="var(--text)"
+              if notice != ""
+                text notice font-size="0.8125rem" font-weight=500 color="amber" role="status" testId="notice"

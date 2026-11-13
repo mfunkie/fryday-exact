@@ -1,0 +1,139 @@
+// Fryday's interaction tests: taps by testId, on any host, against the clock the test owns.
+// Scenes (`at "/?scene=…"`) start from the Rune app's six states; the rest start from an empty
+// log at a pinned instant. Every test starts with empty storage.
+
+test "morning: both doses are due and the orb says so"
+  at "/?scene=morning"
+  clock data
+  expect text "orb-eyebrow" == "DUE NOW"
+  expect text "orb-big" == "Now"
+  expect text "orb-caption" == "Morning insulin"
+  expect text "status-insulin-am-2026-11-06" == "due now"
+  expect text "chip-insulin-pm-2026-11-06" == "in 10h 40m"
+  expect text "streak" == "11"
+  expect text "date" == "Fry · Friday, November 6"
+
+test "a dose is given, sparkles, and the orb moves on"
+  at "/?scene=morning"
+  clock data
+  tap "give-insulin-am-2026-11-06"
+  clock data
+  expect tree has "given-insulin-am-2026-11-06"
+  expect tree has "burst"
+  expect text "status-insulin-am-2026-11-06" == "given"
+  expect text "orb-caption" == "Morning amlodipine"
+  expect text "undo" == "Undo insulin"
+  clock +2300
+  expect tree missing "burst"
+
+test "the guard asks before a second insulin dose, and a second tap gives it"
+  at "/?scene=guard"
+  clock data
+  tap "give-insulin-pm-2026-11-06"
+  clock data
+  expect state pendingKey == "insulin-pm-2026-11-06"
+  expect tree has "guard"
+  expect text "orb-eyebrow" == "CHECK FIRST"
+  expect text "orb-big" == "5h 32m"
+  expect text "orb-caption" == "since Jess gave insulin"
+  expect tree missing "given-insulin-pm-2026-11-06"
+  tap "give-insulin-pm-2026-11-06"
+  clock data
+  expect tree has "given-insulin-pm-2026-11-06"
+  expect tree missing "guard"
+  expect state pendingKey == ""
+
+test "cancel backs out of the guard and gives nothing"
+  at "/?scene=guard"
+  clock data
+  tap "give-insulin-pm-2026-11-06"
+  clock data
+  tap "cancel"
+  clock data
+  expect tree missing "guard"
+  expect text "orb-eyebrow" == "DUE NOW"
+  expect text "status-insulin-pm-2026-11-06" == "due now"
+
+test "doses are logged as whoever is chosen, and the choice is kept"
+  at "/?scene=morning"
+  clock data
+  tap "who-1"
+  tap "give-amlodipine-am-2026-11-06"
+  clock data
+  expect text "given-amlodipine-am-2026-11-06" == "Jess7:20 AM"
+  // A relaunch keeps the choice. (It opens at "/" on a native host, "/?scene=…" on the web, so
+  // the log's own persistence is the fresh-install test's, on the real log.)
+  reload
+  clock data
+  expect state who == 1
+
+test "undo takes back the last dose"
+  at "/?scene=morning"
+  clock data
+  tap "give-insulin-am-2026-11-06"
+  clock data
+  tap "give-amlodipine-am-2026-11-06"
+  clock data
+  expect text "undo" == "Undo amlodipine"
+  tap "undo"
+  clock data
+  expect text "status-amlodipine-am-2026-11-06" == "due now"
+  expect text "undo" == "Undo insulin"
+
+test "late: the evening dose reads late and its button turns coral"
+  at "/?scene=late"
+  clock data
+  expect text "orb-eyebrow" == "LATE"
+  expect text "orb-big" == "1h 40m"
+  expect text "status-insulin-pm-2026-11-06" == "1h 40m late"
+  expect tree has "give-insulin-pm-2026-11-06"
+
+test "done: everything given, the streak ticks up, tomorrow is next"
+  at "/?scene=done"
+  clock data
+  expect text "orb-eyebrow" == "ALL DONE TODAY"
+  expect text "orb-detail" == "7:00 AM tomorrow"
+  expect text "streak" == "12"
+
+test "after midnight, last night's dose is still open and first"
+  at "/?scene=midnight"
+  clock data
+  expect text "date" == "Fry · Saturday, November 7"
+  expect text "orb-eyebrow" == "LATE"
+  expect text "status-insulin-pm-2026-11-06" == "5h 35m late"
+  expect tree has "give-insulin-pm-2026-11-06"
+  expect text "streak" == "11"
+
+test "a fresh install on the real clock: nothing logged, the morning doses open at 6"
+  epoch "2026-11-06T13:30:00Z"
+  time-zone "America/Los_Angeles"
+  clock data
+  expect text "date" == "Fry · Friday, November 6"
+  expect text "chip-insulin-am-2026-11-06" == "in 30m"
+  expect text "streak" == "0"
+  clock +1800000
+  clock data
+  expect text "status-insulin-am-2026-11-06" == "due now"
+  tap "give-insulin-am-2026-11-06"
+  clock data
+  expect text "given-insulin-am-2026-11-06" == "You6:00 AM"
+  reload
+  clock data
+  expect tree has "given-insulin-am-2026-11-06"
+
+test "a dose can't be given before its window opens: there is no button for it"
+  epoch "2026-11-06T20:00:00Z"
+  time-zone "America/Los_Angeles"
+  clock data
+  expect tree missing "give-insulin-pm-2026-11-06"
+  expect text "chip-insulin-pm-2026-11-06" == "in 6h 00m"
+
+// Properties: `verify` explores random walks of taps and checks these after every step.
+always "who is a caregiver's index"
+  expect state who whole
+
+after "cancel" "cancel only clears the guard's question"
+  only writes pendingKey
+
+after "setWho" "choosing a caregiver logs nothing"
+  only writes who
