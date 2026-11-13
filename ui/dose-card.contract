@@ -25,7 +25,7 @@ component DoseCard
       row flex-wrap="wrap" align-items="center" gap=14 row-gap=10
         MedTile(kind=c.kind)
         column flex="1 1 9rem" min-width=0 gap=4
-          text c.name font-size="1.0625rem" font-weight=620 hyphens="auto" testId=`name-${c.key}`
+          text c.name font-size="min(-exact-body, 44px)" font-weight=620 hyphens="auto" testId=`name-${c.key}`
           row flex-wrap="wrap" column-gap=6
             text c.subtitle font-size="0.8125rem" color="muted"
             for w in [c.words] key=w

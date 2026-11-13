@@ -40,11 +40,6 @@
         "finding": "fixed-type",
         "node": "orb-detail",
         "why": "The orb is a dial: its face is a fixed circle sized to its ring, as a watch face is, so its words keep their size; the same words are in the cards, which scale."
-      },
-      {
-        "finding": "clipped",
-        "node": "orb-detail",
-        "why": "The orb is a dial: its face is a fixed circle sized to its ring, as a watch face is, so its words keep their size; the same words are in the cards, which scale."
       }
     ]
   }

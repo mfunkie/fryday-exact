@@ -16,7 +16,7 @@ jobs:
         working-directory: fryday-exact
       - run: bun exact.mjs contract build app.contract --json --errors-only
         working-directory: fryday-exact
-      - run: bun exact.mjs verify --shots .exact/verify
+      - run: bun exact.mjs verify --strict --shots .exact/verify
         working-directory: fryday-exact
       - uses: actions/upload-artifact@v7
         if: always()

@@ -38,11 +38,11 @@ component Orb
           opacity=(face.metal == "rose" ? 1 : 0) transition="opacity 600ms ease"
       column position="absolute" top=(orb - inner) / 2 left=(orb - inner) / 2 width=inner height=inner border-radius=inner / 2
         background-color="orb-face" border="1px solid var(--glass-edge)"
-        align-items="center" justify-content="center" gap=2 role="status" testId="orb-face"
+        align-items="center" justify-content="center" gap=2 overflow="hidden" role="status" testId="orb-face"
         for f in [face] key=`${f.eyebrow}|${f.big}|${f.caption}`
           column align-items="center" gap=2
             animation=(still ? "none" : "swap-in 320ms ease-out both")
             text f.eyebrow font-size=11 font-weight=650 letter-spacing=1 color=(f.tone == "ember" ? "ember-text" : f.tone) testId="orb-eyebrow"
-            text f.big font-size=(wide ? 40 : 36) font-weight=650 font-variant-numeric="tabular-nums" testId="orb-big"
+            text f.big font-size=(wide ? 40 : 32) font-weight=650 font-variant-numeric="tabular-nums" white-space="nowrap" testId="orb-big"
             text f.caption font-size=13 font-weight=500 color="muted" text-align="center" testId="orb-caption"
             text f.detail font-size=12 color="faint" testId="orb-detail"
