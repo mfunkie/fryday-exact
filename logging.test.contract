@@ -1,0 +1,40 @@
+// Logging doses: Give, who it is logged as, and Undo.
+
+test "a dose is given, sparkles, and the orb moves on"
+  at "/?scene=morning"
+  clock data
+  tap "give-insulin-am-2026-11-06"
+  clock data
+  expect tree has "given-insulin-am-2026-11-06"
+  expect tree has "burst"
+  expect text "status-insulin-am-2026-11-06" == "given"
+  expect text "orb-caption" == "Morning amlodipine"
+  expect text "undo" == "Undo insulin"
+  clock +2300
+  expect tree missing "burst"
+
+test "doses are logged as whoever is chosen, and the choice is kept"
+  at "/?scene=morning"
+  clock data
+  tap "who-1"
+  tap "give-amlodipine-am-2026-11-06"
+  clock data
+  expect text "given-amlodipine-am-2026-11-06" == "Jess7:20 AM"
+  // A relaunch keeps the choice. (It opens at "/" on a native host, "/?scene=…" on the web, so
+  // the log's own persistence is the fresh-install test's, on the real log.)
+  reload
+  clock data
+  expect state who == 1
+
+test "undo takes back the last dose"
+  at "/?scene=morning"
+  clock data
+  tap "give-insulin-am-2026-11-06"
+  clock data
+  tap "give-amlodipine-am-2026-11-06"
+  clock data
+  expect text "undo" == "Undo amlodipine"
+  tap "undo"
+  clock data
+  expect text "status-amlodipine-am-2026-11-06" == "due now"
+  expect text "undo" == "Undo insulin"

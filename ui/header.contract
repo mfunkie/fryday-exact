@@ -1,0 +1,25 @@
+// The app's name and date, and who doses are logged as: a radiogroup, so each host draws its own
+// segmented control's semantics (one Tab stop, arrow keys on the web).
+component Header
+  props
+    dateLine: string
+    caregivers: string[]
+    who: number
+    pick: action
+  view
+    row flex-wrap="wrap" align-items="center" gap=12 testId="header"
+      column flex="1 1 12rem" gap=4
+        row align-items="center" gap=10
+          view width=10 height=10 border-radius=5 background-image="linear-gradient(135deg, var(--amber), var(--ember))" aria-hidden=true
+          text "Fryday" role="heading" aria-level=1 font-size="1.625rem" font-weight=650 testId="title"
+        text dateLine font-size="0.875rem" color="muted" testId="date"
+      row flex-wrap="wrap" align-items="center" gap=10
+        text "Logging as" font-size="0.75rem" font-weight=500 color="text"
+        row role="radiogroup" aria-label="Logging as" appearance="none" gap=4 padding=4 border-radius=20
+          background-color="chip-fill" border="1px solid var(--glass-edge)" testId="caregivers"
+          for name, i in caregivers key=name
+            button role="radio" aria-checked=(who == i) press=pick(i) testId=`who-${i}`
+              min-height="1.875rem" padding="0 14px" border-radius=15 border="none"
+              background-color=(who == i ? "chip-on" : "transparent")
+              transition="background-color 200ms ease"
+              text name font-size="0.8125rem" font-weight=(who == i ? 600 : 500) color=(who == i ? "text" : "muted")

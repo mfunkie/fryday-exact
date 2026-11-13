@@ -1,0 +1,20 @@
+fn tileA(kind: string): string = kind == "insulin" ? "var(--tile-insulin-a)" : kind == "liquid" ? "var(--tile-liquid-a)" : "var(--tile-pill-a)"
+fn tileB(kind: string): string = kind == "insulin" ? "var(--tile-insulin-b)" : kind == "liquid" ? "var(--tile-liquid-b)" : "var(--tile-pill-b)"
+
+// A med's tile: a vial, a droplet or a capsule on its kind's gradient.
+component MedTile
+  props
+    kind: string
+  view
+    view width=48 height=48 border-radius=14 flex-shrink=0 align-items="center" justify-content="center"
+      display="flex" background-image=`linear-gradient(135deg, ${tileA(kind)}, ${tileB(kind)})`
+      border="1px solid var(--tile-edge)" aria-hidden=true
+      svg width=26 height=26 viewBox="0 0 26 26"
+        if kind == "insulin"
+          rect x=6 y=1 width=14 height=4 rx=1.5 fill="var(--vial-cap)"
+          rect x=7 y=6 width=12 height=19 rx=3.5 fill="var(--tile-ink)"
+          rect x=9 y=14 width=8 height=2 rx=1 fill="var(--tile-insulin-b)"
+        else if kind == "liquid"
+          path d="M13 2 C13 2 5 11 5 16.5 A8 8 0 0 0 21 16.5 C21 11 13 2 13 2 Z" fill="var(--tile-ink)"
+        else
+          rect x=3 y=9 width=20 height=9 rx=4.5 fill="var(--tile-ink)" transform="rotate(-45 13 13.5)"

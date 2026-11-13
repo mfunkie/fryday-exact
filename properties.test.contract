@@ -1,0 +1,9 @@
+// Properties: `verify` explores random walks of taps (and stores it makes up) and checks these
+// after every step. (A stored `who` can be anything; the root's `me` clamps it, which a
+// property can't read, since it depends on the board.)
+
+after "cancel" "cancel only clears the guard's question"
+  only writes pendingKey
+
+after "setWho" "choosing a caregiver logs nothing"
+  only writes who

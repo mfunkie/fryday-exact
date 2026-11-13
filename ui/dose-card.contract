@@ -1,0 +1,67 @@
+use Card from "./shapes.contract"
+use MedTile from "./med-tile.contract"
+use Sparkles from "./sparkles.contract"
+use swap-in from "./motion.contract"
+
+// One scheduled dose as a glass card: its tile, name and status, and at its end Give (enamel,
+// coral when late or asking), who gave it, or when it opens. When the guard refuses a tap the
+// card asks; a second tap on Give confirms.
+component DoseCard
+  props
+    c: Card
+    bursting: bool
+    caregiver: string
+    still: bool
+    give: action
+    cancel: action
+  view
+    column position="relative" padding=16 gap=12 border-radius=22
+      background-color="glass-fill" backdrop-filter="blur(18px)"
+      border=(c.guard != "" ? "1px solid var(--ember-edge)" : "1px solid var(--glass-edge)")
+      box-shadow=(c.guard != "" ? "0 0 26px var(--glow-ember)" : c.next ? "0 0 22px var(--glow-amber)" : "0 12px 32px var(--glass-shadow)")
+      transition="box-shadow 400ms ease"
+      -exact-layout-transition=(still ? "none" : "320ms ease")
+      testId=`card-${c.key}`
+      row flex-wrap="wrap" align-items="center" gap=14 row-gap=10
+        MedTile(kind=c.kind)
+        column flex="1 1 9rem" min-width=0 gap=4
+          text c.name font-size="1.0625rem" font-weight=620 hyphens="auto" testId=`name-${c.key}`
+          row flex-wrap="wrap" column-gap=6
+            text c.subtitle font-size="0.8125rem" color="muted"
+            for w in [c.words] key=w
+              text w font-size="0.8125rem" font-weight=600 color=(c.tone == "ember" ? "ember-text" : c.tone)
+                animation=(still ? "none" : "swap-in 280ms ease-out both") testId=`status-${c.key}`
+        // The card's end: Give, who gave it, or when it opens.
+        if c.state == "give" or c.state == "late"
+          button press=give(c.key, c.med, c.slot, c.day) testId=`give-${c.key}`
+            aria-label=`${c.guard != "" ? "Give anyway" : "Give"}: ${c.name.toLowerCase()} as ${caregiver}`
+            min-height="2.5rem" padding=(c.guard != "" ? "0 18px" : "0 26px") border-radius=20 max-width="100%"
+            border="1.5px solid var(--give-edge)"
+            background-image=(c.guard != "" or c.state == "late" ? "linear-gradient(180deg, var(--warn-top), var(--warn-bottom))" : "linear-gradient(180deg, var(--give-top), var(--give-bottom))")
+            box-shadow=(c.guard != "" or c.state == "late" ? "0 8px 20px var(--glow-ember)" : "0 8px 20px var(--glow-tangerine)")
+            :active
+              -exact-press-scale=0.94
+            text (c.guard != "" ? "Give anyway" : "Give") font-size="0.875rem" font-weight=700 color="on-metal"
+        else if c.state == "given"
+          row align-items="center" gap=10 testId=`given-${c.key}`
+            column align-items="flex-end" gap=2
+              text c.givenBy font-size="0.8125rem" font-weight=600
+              text c.givenAt font-size="0.75rem" color="faint"
+            view width=30 height=30 border-radius=15 background-color="mint-wash" border="1px solid var(--mint-edge)"
+              display="flex" align-items="center" justify-content="center" aria-hidden=true
+              svg width=14 height=14 viewBox="0 0 14 14"
+                path d="M2 7.5 L5.5 11 L12 3.5" stroke="var(--mint)" stroke-width=2.4 fill="none" stroke-linecap="round" stroke-linejoin="round"
+        else
+          view min-height="1.875rem" padding="0 12px" border-radius=15 display="flex" align-items="center"
+            background-color=(c.state == "missed" ? "ember-wash" : "chip-fill") border="1px solid var(--chip-fill)"
+            testId=`chip-${c.key}`
+            text (c.state == "missed" ? "Missed" : c.chip) font-size="0.78125rem" font-weight=600 color=(c.state == "missed" ? "ember-text" : "muted")
+      // The guard: what was given, and a way out.
+      if c.guard != ""
+        row flex-wrap="wrap" align-items="center" gap=12 animation=(still ? "none" : "swap-in 260ms ease-out both") role="alert" testId="guard"
+          text c.guard font-size="0.78125rem" font-weight=500 color="guard-text" flex="1 1 12rem" min-width=0
+          button press=cancel testId="cancel"
+            text "Cancel" font-size="0.8125rem" font-weight=600 color="muted"
+      // A sparkle burst over the dose just logged.
+      if bursting
+        Sparkles(still=still)

@@ -1,0 +1,48 @@
+use Face from "./shapes.contract"
+use radar, spin, swap-in from "./motion.contract"
+
+// The hero: an aura in the face's tone, pulse rings while a dose wants attention, a liquid-metal
+// ring (gold, chrome or rose, crossfading), and the countdown on its face. The face is a dial,
+// sized to its ring, so its type is fixed (app.json's verify.accept says why).
+component Orb
+  props
+    face: Face
+    wide: bool
+    still: bool
+  derive orb = wide ? 300 : 260
+  derive ring = wide ? 224 : 196
+  derive inner = wide ? 190 : 166
+  view
+    view position="relative" width=orb height=orb testId="orb"
+      view position="absolute" top=(orb - ring) / 2 left=(orb - ring) / 2 width=ring height=ring aria-hidden=true testId="aura"
+        view position="absolute" inset=0 border-radius=ring / 2 box-shadow="0 0 60px 14px var(--glow-tangerine)"
+          opacity=(face.tone == "tangerine" ? 1 : 0) transition="opacity 600ms ease"
+        view position="absolute" inset=0 border-radius=ring / 2 box-shadow="0 0 60px 14px var(--glow-amber)"
+          opacity=(face.tone == "amber" ? 1 : 0) transition="opacity 600ms ease"
+        view position="absolute" inset=0 border-radius=ring / 2 box-shadow="0 0 60px 14px var(--glow-mint)"
+          opacity=(face.tone == "mint" ? 1 : 0) transition="opacity 600ms ease"
+        view position="absolute" inset=0 border-radius=ring / 2 box-shadow="0 0 60px 14px var(--glow-ember)"
+          opacity=(face.tone == "ember" ? 1 : 0) transition="opacity 600ms ease"
+      if face.pulse
+        for n in [0, 1] key=n
+          view position="absolute" top=(orb - ring) / 2 left=(orb - ring) / 2 width=ring height=ring border-radius=ring / 2
+            border-width=2 border-style="solid" border-color=face.tone aria-hidden=true
+            animation=(still ? "none" : `radar 2.4s ease-out ${n * 1.2}s infinite`) opacity=(still ? 0 : 1)
+      view position="absolute" top=(orb - ring) / 2 left=(orb - ring) / 2 width=ring height=ring border-radius=ring / 2
+        aria-hidden=true testId="ring" animation=(still ? "none" : "spin 14s linear infinite")
+        view position="absolute" inset=0 border-radius=ring / 2 background-image="conic-gradient(from 20deg, var(--gold-hi), var(--gold-mid) 14%, var(--gold-lo) 26%, var(--gold-hi) 38%, var(--gold-mid) 52%, var(--gold-lo) 66%, var(--gold-hi) 80%, var(--gold-mid) 90%, var(--gold-hi))"
+          opacity=(face.metal == "gold" ? 1 : 0) transition="opacity 600ms ease"
+        view position="absolute" inset=0 border-radius=ring / 2 background-image="conic-gradient(from 20deg, var(--chrome-hi), var(--chrome-mid) 14%, var(--chrome-lo) 26%, var(--chrome-hi) 38%, var(--chrome-mid) 52%, var(--chrome-lo) 66%, var(--chrome-hi) 80%, var(--chrome-mid) 90%, var(--chrome-hi))"
+          opacity=(face.metal == "chrome" ? 1 : 0) transition="opacity 600ms ease"
+        view position="absolute" inset=0 border-radius=ring / 2 background-image="conic-gradient(from 20deg, var(--rose-hi), var(--rose-mid) 14%, var(--rose-lo) 26%, var(--rose-hi) 38%, var(--rose-mid) 52%, var(--rose-lo) 66%, var(--rose-hi) 80%, var(--rose-mid) 90%, var(--rose-hi))"
+          opacity=(face.metal == "rose" ? 1 : 0) transition="opacity 600ms ease"
+      column position="absolute" top=(orb - inner) / 2 left=(orb - inner) / 2 width=inner height=inner border-radius=inner / 2
+        background-color="orb-face" border="1px solid var(--glass-edge)"
+        align-items="center" justify-content="center" gap=2 role="status" testId="orb-face"
+        for f in [face] key=`${f.eyebrow}|${f.big}|${f.caption}`
+          column align-items="center" gap=2
+            animation=(still ? "none" : "swap-in 320ms ease-out both")
+            text f.eyebrow font-size=11 font-weight=650 letter-spacing=1 color=(f.tone == "ember" ? "ember-text" : f.tone) testId="orb-eyebrow"
+            text f.big font-size=(wide ? 40 : 36) font-weight=650 font-variant-numeric="tabular-nums" testId="orb-big"
+            text f.caption font-size=13 font-weight=500 color="muted" text-align="center" testId="orb-caption"
+            text f.detail font-size=12 color="faint" testId="orb-detail"

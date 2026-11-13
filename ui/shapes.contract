@@ -1,0 +1,56 @@
+// The board the data module answers (core/board.ts), as Contract shapes. `contract build`
+// type-checks app.ts against these, so a field added on one side and not the other fails the build.
+
+shape Time
+  epochAtZero: number
+  utcOffset: number
+
+shape Viewport
+  width: number
+  prefersReducedMotion: bool
+
+shape Face
+  eyebrow: string
+  big: string
+  caption: string
+  detail: string
+  tone: string
+  metal: string
+  pulse: bool
+
+shape Card
+  key: string
+  med: string
+  slot: string
+  day: string
+  name: string
+  kind: string
+  subtitle: string
+  words: string
+  tone: string
+  state: string
+  givenBy: string
+  givenAt: string
+  chip: string
+  next: bool
+  guard: string
+
+shape Dot
+  day: string
+  fill: string
+  fraction: number
+
+shape Board
+  dateLine: string
+  caregivers: string[]
+  face: Face
+  cards: Card[]
+  streak: number
+  dots: Dot[]
+  undo: string
+  late: bool
+
+shape Reply
+  ok: bool
+  outcome: string
+  notice: string

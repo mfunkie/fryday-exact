@@ -1,0 +1,29 @@
+// The double-dose guard: it asks, a second tap gives, Cancel backs out.
+
+test "the guard asks before a second insulin dose, and a second tap gives it"
+  at "/?scene=guard"
+  clock data
+  tap "give-insulin-pm-2026-11-06"
+  clock data
+  expect state pendingKey == "insulin-pm-2026-11-06"
+  expect tree has "guard"
+  expect text "orb-eyebrow" == "CHECK FIRST"
+  expect text "orb-big" == "5h 32m"
+  expect text "orb-caption" == "since Jess gave insulin"
+  expect tree missing "given-insulin-pm-2026-11-06"
+  tap "give-insulin-pm-2026-11-06"
+  clock data
+  expect tree has "given-insulin-pm-2026-11-06"
+  expect tree missing "guard"
+  expect state pendingKey == ""
+
+test "cancel backs out of the guard and gives nothing"
+  at "/?scene=guard"
+  clock data
+  tap "give-insulin-pm-2026-11-06"
+  clock data
+  tap "cancel"
+  clock data
+  expect tree missing "guard"
+  expect text "orb-eyebrow" == "DUE NOW"
+  expect text "status-insulin-pm-2026-11-06" == "due now"

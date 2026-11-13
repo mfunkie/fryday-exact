@@ -1,0 +1,19 @@
+// Every animation the app plays. Each file `use`s the keyframes it names.
+
+keyframes spin
+  to rotate="360deg"
+keyframes radar
+  from scale=0.82 opacity=0.75
+  to scale=1.32 opacity=0
+keyframes drift
+  50% translate="-4% 3%" scale=1.08
+keyframes swap-in
+  from opacity=0 scale=0.94
+keyframes swap-out
+  to opacity=0 scale=1.04
+keyframes breathe
+  50% opacity=0.55
+keyframes sparkle
+  0% opacity=0 scale=0.2
+  25% opacity=1 scale=1.1
+  100% opacity=0 scale=0.3 translate="0px -18px"

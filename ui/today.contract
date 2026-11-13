@@ -1,0 +1,27 @@
+use Card from "./shapes.contract"
+use DoseCard from "./dose-card.contract"
+
+// Today's doses (last night's first while it's still open), Undo for a mistaken tap, and the
+// last refusal's notice.
+component Today
+  props
+    cards: Card[]
+    undoLabel: string
+    notice: string
+    burstKey: string
+    caregiver: string
+    still: bool
+    give: action
+    cancel: action
+    undo: action
+  view
+    column flex="1 1 360px" min-width=0 gap=12 testId="today"
+      row flex-wrap="wrap" align-items="center" gap=8
+        text "Today" role="heading" aria-level=2 font-size="1.125rem" font-weight=650 flex="1 1 6rem"
+        if undoLabel != ""
+          button press=undo aria-label="Undo the last logged dose" testId="undo"
+            text undoLabel font-size="0.8125rem" color="muted"
+      for c in cards key=c.key
+        DoseCard(c=c, bursting=(burstKey == c.key), caregiver=caregiver, still=still, give=give, cancel=cancel)
+      if notice != ""
+        text notice font-size="0.8125rem" font-weight=500 color="amber" role="status" testId="notice"

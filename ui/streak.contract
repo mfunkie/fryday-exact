@@ -1,0 +1,22 @@
+use Dot from "./shapes.contract"
+
+// Complete days in a row, and the last fourteen as dots: full, partial or empty; today ringed.
+component StreakCard
+  props
+    streak: number
+    dots: Dot[]
+  view
+    column align-self="stretch" padding=16 gap=12 border-radius=20 background-color="glass-fill"
+      backdrop-filter="blur(18px)" border="1px solid var(--glass-edge)" box-shadow="0 12px 32px var(--glass-shadow)"
+      testId="streak-card"
+      row flex-wrap="wrap" align-items="center" gap=10
+        text `${streak}` font-size="1.875rem" font-weight=700 color="amber" testId="streak"
+        column flex="1 1 8rem" gap=1
+          text "day streak" font-size="0.875rem" font-weight=600
+          text "every dose logged" font-size="0.75rem" color="faint"
+      row gap=6 flex-wrap="wrap" aria-label=`${dots.filter(d => d.fill == "full").length} of the last 14 days complete` testId="days"
+        for d, i in dots key=d.day
+          view width=14 height=14 border-radius=7 testId=`day-${i}`
+            background-image=(d.fill == "full" ? "linear-gradient(135deg, var(--amber), var(--tangerine))" : "none")
+            background-color=(d.fill == "partial" ? "dot-partial" : d.fill == "empty" ? "dot-empty" : "transparent")
+            box-shadow=(i == 13 ? "0 0 0 2px var(--ink), 0 0 0 3.5px var(--dot-ring)" : d.fill == "full" ? "0 0 8px var(--glow-tangerine)" : "none")

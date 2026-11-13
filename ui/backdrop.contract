@@ -1,0 +1,17 @@
+use drift from "./motion.contract"
+
+// The night: an oversized mesh that drifts, so its edges never show, warming to ember while a
+// dose is late. Two literal layers crossfade: Exact checks a literal gradient at build, and drops
+// one a function builds at run time, so each is written out.
+component Backdrop
+  props
+    late: bool
+    still: bool
+  view
+    view position="absolute" inset=0 overflow="hidden" aria-hidden=true
+     view position="absolute" top="-15%" left="-15%" width="130%" height="130%"
+      animation=(still ? "none" : "drift 18s ease-in-out infinite") testId="mesh"
+      view position="absolute" inset=0 background-image="radial-gradient(42% 38% at 96% 0%, var(--tangerine), transparent), radial-gradient(55% 60% at 12% 92%, var(--mesh-rust), transparent), radial-gradient(45% 50% at 22% 32%, var(--mesh-plum), transparent), radial-gradient(70% 70% at 70% 85%, var(--mesh-plum), transparent)"
+        opacity=(late ? 0 : 0.75) transition="opacity 900ms ease"
+      view position="absolute" inset=0 background-image="radial-gradient(42% 38% at 96% 0%, var(--ember), transparent), radial-gradient(55% 60% at 12% 92%, var(--mesh-wine), transparent), radial-gradient(45% 50% at 20% 30%, var(--tangerine), transparent), radial-gradient(70% 70% at 70% 85%, var(--mesh-deep), transparent)"
+        opacity=(late ? 0.75 : 0) transition="opacity 900ms ease"

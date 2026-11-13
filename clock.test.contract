@@ -1,0 +1,25 @@
+// On the real clock, from an empty log, with the instant and time zone the test pins.
+
+test "a fresh install on the real clock: nothing logged, the morning doses open at 6"
+  epoch "2026-11-06T13:30:00Z"
+  time-zone "America/Los_Angeles"
+  clock data
+  expect text "date" == "Fry · Friday, November 6"
+  expect text "chip-insulin-am-2026-11-06" == "in 30m"
+  expect text "streak" == "0"
+  clock +1800000
+  clock data
+  expect text "status-insulin-am-2026-11-06" == "due now"
+  tap "give-insulin-am-2026-11-06"
+  clock data
+  expect text "given-insulin-am-2026-11-06" == "You6:00 AM"
+  reload
+  clock data
+  expect tree has "given-insulin-am-2026-11-06"
+
+test "a dose can't be given before its window opens: there is no button for it"
+  epoch "2026-11-06T20:00:00Z"
+  time-zone "America/Los_Angeles"
+  clock data
+  expect tree missing "give-insulin-pm-2026-11-06"
+  expect text "chip-insulin-pm-2026-11-06" == "in 6h 00m"
