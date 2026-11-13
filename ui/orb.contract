@@ -43,6 +43,6 @@ component Orb
           column align-items="center" gap=2
             animation=(still ? "none" : "swap-in 320ms ease-out both")
             text f.eyebrow font-size=11 font-weight=650 letter-spacing=1 color=(f.tone == "ember" ? "ember-text" : f.tone) testId="orb-eyebrow"
-            text f.big font-size=(wide ? 40 : 32) font-weight=650 font-variant-numeric="tabular-nums" white-space="nowrap" testId="orb-big"
+            text f.big font-size=(wide ? 36 : 32) font-weight=650 font-variant-numeric="tabular-nums" white-space="nowrap" testId="orb-big"
             text f.caption font-size=13 font-weight=500 color="muted" text-align="center" testId="orb-caption"
             text f.detail font-size=12 color="faint" testId="orb-detail"
